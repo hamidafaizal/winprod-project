@@ -1,5 +1,5 @@
 // src/pages/KomregPage.jsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { analyzeImages, approveAndSend, getFilteredLinks } from '../services/api';
 
@@ -22,21 +22,14 @@ function KomregPage() {
     }
   };
 
-  // =================================================================
-  // === PERBAIKAN LOGIKA UPLOAD GAMBAR DI SINI ===
-  // =================================================================
   const handleImageChange = (event) => {
-    // 1. Pastikan sistem selalu dalam keadaan 'siap' saat memilih file
     setIsLoading(false);
     setError(null);
-
     if (event.target.files) {
-      // 2. Tambahkan file baru ke daftar yang sudah ada (tidak menggantikan)
       const newFiles = Array.from(event.target.files);
       setImages(prevImages => [...prevImages, ...newFiles]);
     }
   };
-  // =================================================================
 
   const handleAnalisaClick = async () => {
     if (images.length === 0) {
@@ -54,12 +47,13 @@ function KomregPage() {
     try {
       const response = await analyzeImages(formData);
       setAnalysisResults(prev => [...prev, ...response.data]);
-      // Kosongkan daftar gambar setelah berhasil dianalisa
-      setImages([]);
     } catch (err) {
-      setError(err.response?.data?.message || 'Gagal menganalisa.');
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Gagal menganalisa.';
+      setError(errorMessage);
     } finally {
+      // Perbaikan uploader macet: pastikan state dibersihkan di sini
       setIsLoading(false);
+      setImages([]); 
     }
   };
   
@@ -112,7 +106,6 @@ function KomregPage() {
 
   return (
     <div className="space-y-8">
-      {/* Progress Bar Analisa */}
       <div className="p-4 bg-[#19386D]/20 rounded-xl border border-[#59C6D4]/20">
         <div className="flex justify-between items-center mb-1">
           <span className="text-base font-medium text-[#77F7F0]">Progress Keseluruhan</span>
@@ -128,7 +121,6 @@ function KomregPage() {
         )}
       </div>
 
-      {/* Card Upload Gambar */}
       <div className="w-full p-8 bg-[#19386D]/20 rounded-2xl backdrop-blur-xl border border-[#59C6D4]/20">
         <h2 className="text-2xl font-bold text-[#77F7F0] mb-6">1. Upload Gambar Produk</h2>
           <>
@@ -144,10 +136,9 @@ function KomregPage() {
               </button>
             </div>
           </>
-        {error && <div className="mt-4 p-3 bg-red-500/20 text-red-300 rounded-md">{error}</div>}
+        {error && <div className="mt-4 p-3 bg-red-500/20 text-red-300 rounded-md break-words">{error}</div>}
       </div>
       
-      {/* Card Hasil Analisa */}
       <div className="w-full p-8 bg-[#19386D]/20 rounded-2xl backdrop-blur-xl border border-[#59C6D4]/20">
         <h2 className="text-2xl font-bold text-[#77F7F0] mb-6">2. Hasil Analisa Komisi</h2>
         {analysisResults.length > 0 ? (
